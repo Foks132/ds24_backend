@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://root:root@localhost:5432/base"
+  url      = env("DB_URL")
 }
 
 model user {
@@ -30,7 +30,7 @@ model booking {
   id        Int     @id @default(autoincrement())
   userId    Int
   roomId    Int
-  isVip     Boolean
+  isVip     Boolean @default(false)
   createdAt Int
   startDate Int
   lastDate  Int
@@ -38,7 +38,6 @@ model booking {
   user      user    @relation(fields: [userId], references: [id])
   isDeleted Boolean @default(false)
 
-  @@unique([roomId, startDate, lastDate])
   @@index(id)
   @@index(userId)
   @@index(roomId)

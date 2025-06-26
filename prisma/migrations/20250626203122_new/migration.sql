@@ -2,10 +2,8 @@
 CREATE TABLE "user" (
     "id" SERIAL NOT NULL,
     "phone" TEXT NOT NULL,
-    "login" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );
@@ -23,20 +21,17 @@ CREATE TABLE "booking" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "roomId" INTEGER NOT NULL,
-    "isVip" BOOLEAN NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "startDate" TIMESTAMP(3) NOT NULL,
-    "lastDate" TIMESTAMP(3) NOT NULL,
+    "isVip" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" INTEGER NOT NULL,
+    "startDate" INTEGER NOT NULL,
+    "lastDate" INTEGER NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "booking_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_phone_key" ON "user"("phone");
-
--- CreateIndex
-CREATE UNIQUE INDEX "user_login_key" ON "user"("login");
 
 -- CreateIndex
 CREATE INDEX "user_id_idx" ON "user"("id");
@@ -51,7 +46,13 @@ CREATE UNIQUE INDEX "room_number_key" ON "room"("number");
 CREATE INDEX "room_id_idx" ON "room"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "booking_roomId_startDate_lastDate_key" ON "booking"("roomId", "startDate", "lastDate");
+CREATE INDEX "booking_id_idx" ON "booking"("id");
+
+-- CreateIndex
+CREATE INDEX "booking_userId_idx" ON "booking"("userId");
+
+-- CreateIndex
+CREATE INDEX "booking_roomId_idx" ON "booking"("roomId");
 
 -- AddForeignKey
 ALTER TABLE "booking" ADD CONSTRAINT "booking_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "room"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
