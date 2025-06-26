@@ -19,8 +19,8 @@ export const getRoomsValidation = data => {
 
 export const declineBookingValidation = data => {
 	const schema = Joi.object({
-		id: Joi.number().optional().label('id'),
-		userId: Joi.number().optional().label('userId'),
+		id: Joi.number().required().label('id'),
+		userId: Joi.number().required().label('userId'),
 	});
 	return schema.validate(data);
 };
