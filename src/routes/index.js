@@ -4,5 +4,5 @@ import bookingRouter from './bookingRouter.js';
 
 export const apiRouter = express.Router();
 
-apiRouter.use("/booking", bookingRouter);
-apiRouter.use("/rooms", roomsRouter);
+apiRouter.use('/booking', bookingRouter);
+apiRouter.use('/rooms', roomsRouter);
