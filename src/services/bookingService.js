@@ -5,61 +5,76 @@ const vipServiceUrl = `${APP_PROT || 'http'}://${NODE_HOST || 'localhost'}:${NOD
 
 export const BookingService = {
 	create: async (userId, roomId, startDate, lastDate) => {
-		const findUser = await dbPrisma.user.findUnique({where: {id: Number(userId)}});
-		if (!findUser) throw Error('This user was not found');
-
-		const findBooking = await dbPrisma.booking.findFirst({
-			where: {
-				roomId: Number(roomId),
-				startDate: Number(startDate),
-				lastDate: Number(lastDate),
-				isDeleted: false,
-			},
+		const findUser = await dbPrisma.user.findUnique({
+			where: {id: Number(userId)},
 		});
-		if (findBooking) throw Error('This room is booked');
+		if (!findUser) throw new Error('This user was not found');
 
 		const createdAt = Math.floor(Date.now() / 1000);
 		const isVip = await userResponse(userId);
-		
-		const booking = await dbPrisma.booking.create({
-			data: {
-				userId: Number(userId),
-				roomId: Number(roomId),
-				startDate: Number(startDate),
-				lastDate: Number(lastDate),
-				createdAt: createdAt,
-				isVip,
-			},
+
+		const booking = await dbPrisma.$transaction(async prisma => {
+			const findBooking = await prisma.booking.findFirst({
+				where: {
+					roomId: Number(roomId),
+					isDeleted: false,
+					startDate: {lte: Number(lastDate)},
+					lastDate: {gte: Number(startDate)},
+				},
+			});
+			if (findBooking) {
+				throw new Error('This room is already booked for this period');
+			}
+
+			const newBooking = await prisma.booking.create({
+				data: {
+					userId: Number(userId),
+					roomId: Number(roomId),
+					startDate: Number(startDate),
+					lastDate: Number(lastDate),
+					createdAt,
+					isVip,
+				},
+			});
+
+			return newBooking;
 		});
 
 		return booking;
 	},
 
 	decline: async (id, userId) => {
-		const findUser = await dbPrisma.user.findUnique({where: {id: Number(userId)}});
-		if (!findUser) throw Error('This user was not found');
-
-		const findBooking = await dbPrisma.booking.findFirst({
-			where: {
-				id: Number(id),
-				userId: Number(userId),
-				isDeleted: false,
-			},
+		const findUser = await dbPrisma.user.findUnique({
+			where: {id: Number(userId)},
 		});
-		if (!findBooking) throw Error(`This room was not booked with this userId ${userId}`);
+		if (!findUser) throw new Error('This user was not found');
 
-		const booking = await dbPrisma.booking.update({
-			where: {
-				id: Number(id),
-				userId: Number(userId),
-				isDeleted: false,
-			},
-			data: {
-				isDeleted: true,
-			},
+		const updatedBooking = await dbPrisma.$transaction(async prisma => {
+			const findBooking = await prisma.booking.findFirst({
+				where: {
+					id: Number(id),
+					userId: Number(userId),
+					isDeleted: false,
+				},
+			});
+
+			if (!findBooking) {
+				throw new Error(`This room was not booked with this userId ${userId}`);
+			}
+
+			const deletedBooking = await prisma.booking.update({
+				where: {
+					id: Number(id),
+				},
+				data: {
+					isDeleted: true,
+				},
+			});
+
+			return deletedBooking;
 		});
 
-		return !!booking;
+		return !!updatedBooking;
 	},
 };
 
@@ -70,6 +85,7 @@ const userResponse = async userId => {
 			'Content-Type': 'application/json',
 		},
 	});
+
 	if (!response.ok) {
 		throw new Error(`Failed to fetch VIP info, status: ${response.status}`);
 	}

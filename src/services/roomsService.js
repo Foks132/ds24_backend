@@ -5,6 +5,10 @@ export const RoomsService = {
 		const where = {};
 
 		if (startDate && lastDate) {
+			if (Number(startDate) >= Number(lastDate)) {
+				throw Error('Invalid date range');
+			}
+
 			where.booking = {
 				none: {
 					AND: [

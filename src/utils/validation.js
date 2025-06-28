@@ -8,11 +8,12 @@ export const loginUserValidation = data => {
 };
 
 export const getRoomsValidation = data => {
+	const {startDate, lastDate} = data;
 	const schema = Joi.object({
 		userId: Joi.number().optional().label('userId'),
 		roomId: Joi.number().optional().label('roomId'),
-		startDate: Joi.number().optional().label('startDate'),
-		lastDate: Joi.number().optional().label('lastDate'),
+		startDate: Joi.date().optional().label('startDate'),
+		lastDate: Joi.date().greater(Joi.ref('startDate')).optional().label('lastDate'),
 	});
 	return schema.validate(data);
 };
